@@ -29,6 +29,7 @@ jobs:
       run: git add *
     
     - name: Commit the staged changes if there are any
+      run: |
         # Make Bash print the commands as it is executing them
         set -x
 
