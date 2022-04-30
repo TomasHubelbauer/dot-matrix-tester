@@ -2,7 +2,8 @@ name: main
 on:
   workflow_dispatch:
   push:
-  - paths: .github/workflows/main.yml
+    paths:
+    - .github/workflows/main.yml
   schedule:
   - cron: '0 * * * *'
 
