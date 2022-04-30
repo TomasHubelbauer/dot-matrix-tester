@@ -1,6 +1,8 @@
 name: main
 on:
   workflow_dispatch:
+  push:
+  - paths: .github/workflows/main.yml
   schedule:
   - cron: '0 * * * *'
 
@@ -10,21 +12,26 @@ jobs:
     steps:
     - name: Check out the repository to get access to the workflow scripts
       uses: actions/checkout@main
+    
     - name: Scrape the Wokwi sketch and commit it to the repository
+      # See https://apple.stackexchange.com/a/100573/193285
+      run: wget -r -np -k https://wokwi.com/projects/330373550359708244
+
+    - name: Print a tree listing of the scraped files
+      run: tree .
+    
+    - name: Impersonate the GitHub Actions service account
       run: |
+        git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git config --global user.name "github-actions[bot]"
+    
+    - name: Stage the Git index changes resulting from the scrape
+      run: git add *
+    
+    - name: Commit the staged changes if there are any
         # Make Bash print the commands as it is executing them
         set -x
 
-        # Scrape the Wokwi site to make viewable locally
-        # See https://apple.stackexchange.com/a/100573/193285
-        wget -r -np -k https://wokwi.com/projects/330373550359708244
-        
-        # Impersonate the GitHub Actions service account
-        git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-        git config --global user.name "github-actions[bot]"
-        
-        # Stage the Git index changes resulting from the scrape
-        git add *
         # Bail if there are no changes to commit
         if git diff-index --quiet HEAD --; then
           exit
