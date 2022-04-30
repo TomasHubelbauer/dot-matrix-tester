@@ -1,0 +1,38 @@
+name: main
+on:
+  workflow_dispatch:
+  schedule:
+  - cron: '0 * * * *'
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out the repository to get access to the workflow scripts
+      uses: actions/checkout@main
+    - name: Scrape the Wokwi sketch and commit it to the repository
+      run: |
+        # Make Bash print the commands as it is executing them
+        set -x
+
+        # Scrape the Wokwi site to make viewable locally
+        # See https://apple.stackexchange.com/a/100573/193285
+        wget -r -np -k https://wokwi.com/projects/330373550359708244
+        
+        # Impersonate the GitHub Actions service account
+        git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git config --global user.name "github-actions[bot]"
+        
+        # Stage the Git index changes resulting from the scrape
+        git add *
+        # Bail if there are no changes to commit
+        if git diff-index --quiet HEAD --; then
+          exit
+        fi
+
+        # Commit the staged changes to the workflow repository
+        git commit -m "Scrape the Wokwi sketch" -m "This is an automated commit."
+        
+        # Push the commit to the workflow repository
+        git pull --rebase --autostash
+        git push
